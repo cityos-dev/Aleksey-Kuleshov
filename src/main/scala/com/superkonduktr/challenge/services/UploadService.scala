@@ -13,10 +13,10 @@ class UploadService[F[_]: Async](
   fileRepository: FileRepository[F],
   fileMetadataRepository: FileMetadataRepository[F]
 ) {
-  def getFile(fileId: String): F[Option[FileMetadata]] =
+  def getFileMetadata(fileId: String): F[Option[FileMetadata]] =
     fileMetadataRepository.get(fileId)
 
-  def listFiles: F[List[FileMetadata]] =
+  def listFilesMetadata: F[List[FileMetadata]] =
     fileMetadataRepository.getAll
 
   def saveFile(part: Part[F]): F[FileMetadata] =

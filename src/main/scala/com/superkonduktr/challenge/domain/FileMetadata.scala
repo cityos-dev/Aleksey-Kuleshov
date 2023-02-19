@@ -11,7 +11,7 @@ import org.http4s.circe.jsonEncoderOf
 
 case class FileMetadata(
   id: String,
-  name: Option[String],
+  name: String,
   size: Int,
   createdAt: OffsetDateTime
 )
@@ -21,7 +21,7 @@ object FileMetadata {
     (fileMetadata: FileMetadata) =>
       Json.obj(
         "fileid" -> Json.fromString(fileMetadata.id),
-        "name" -> fileMetadata.name.fold(Json.Null)(Json.fromString),
+        "name" -> Json.fromString(fileMetadata.name),
         "size" -> Json.fromInt(fileMetadata.size),
         "created_at" -> Json.fromString(fileMetadata.createdAt.toString)
       )

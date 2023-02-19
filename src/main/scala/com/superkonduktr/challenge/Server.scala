@@ -17,6 +17,7 @@ import org.http4s.server.Router
 import org.http4s.server.Server as Http4sServer
 import org.typelevel.ci.CIString
 
+import com.superkonduktr.challenge.Server.headerContentDisposition
 import com.superkonduktr.challenge.config.ServerConfig
 import com.superkonduktr.challenge.domain.FileMetadata
 import com.superkonduktr.challenge.services.UploadService
@@ -45,13 +46,19 @@ object Server {
         Ok("Service is healthy")
 
       case GET -> Root / "files" =>
-        Ok(uploadService.listFiles)
+        Ok(uploadService.listFilesMetadata)
 
       case request @ GET -> Root / "files" / fileId =>
-        StaticFile
-          .fromPath(fs2.io.file.Path("/Users/supc/Desktop/HY2bL3g5mLy_VY5D.mp4"), Some(request))
-          .map(_.putHeaders(headerContentDisposition("belochka.mp4")))
-          .getOrElseF(NotFound())
+        for {
+          fileExists <- uploadService.getFileMetadata(fileId)
+          response <- fileExists match {
+            case None => NotFound()
+            case Some(fileMetadata) => StaticFile
+                .fromPath(fs2.io.file.Path(s"/Users/supc/Desktop/${fileMetadata.id}"), Some(request))
+                .map(_.putHeaders(headerContentDisposition(fileMetadata.name)))
+                .getOrElseF(NotFound())
+          }
+        } yield response
 
       case request @ POST -> Root / "files" =>
         request.decode[Multipart[F]] { decoded =>
