@@ -1,7 +1,5 @@
 package com.superkonduktr.challenge.services
 
-import java.util.UUID
-
 import cats.effect.Async
 import cats.syntax.all.*
 import org.http4s.multipart.Part
@@ -22,15 +20,14 @@ class UploadService[F[_]: Async](
     fileMetadataRepository.getAll
 
   def saveFile(part: Part[F]): F[FileMetadata] =
-    val fileId = UUID.randomUUID.toString
     for {
-      _ <- fileRepository.store(part, fileId)
-      fileMetadata <- fileMetadataRepository.create(fileId, part.filename, -1)
+      fileMetadata <- fileMetadataRepository.create(part.filename, 0)
+      _ <- fileRepository.store(part, fileMetadata.id)
     } yield fileMetadata
 
   def deleteFile(fileId: String): F[Unit] =
     for {
       _ <- fileMetadataRepository.delete(fileId)
-      _ <- fileRepository.delete(???)
+      _ <- fileRepository.delete(fileId)
     } yield ()
 }

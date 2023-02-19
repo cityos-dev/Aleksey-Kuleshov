@@ -26,16 +26,13 @@ class FileMetadataRepository[F[_]: Async](transactor: HikariTransactor[F]) {
       .transact(transactor)
 
   def create(
-    fileId: String,
     fileName: Option[String],
     fileSize: Int
   ): F[FileMetadata] =
-    FileMetadata(
-      id = fileId,
-      name = fileName,
-      size = fileSize,
-      createdAt = OffsetDateTime.now()
-    ).pure[F]
+    sql"INSERT INTO files_metadata (name, size_bytes) VALUES ($fileName, $fileSize)"
+      .update
+      .withUniqueGeneratedKeys[FileMetadata]("id", "name", "size_bytes", "created_at")
+      .transact(transactor)
 
   def delete(fileId: String): F[Unit] =
     sql"DELETE FROM files_metadata WHERE id = $fileId"
