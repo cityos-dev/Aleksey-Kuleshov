@@ -24,8 +24,9 @@ lazy val root = (project in file("."))
       "io.circe" %% "circe-generic" % CirceVersion,
       "com.github.pureconfig" %% "pureconfig-core" % PureConfigVersion,
       "org.tpolecat" %% "doobie-core" % DoobieVersion,
-      "org.tpolecat" %% "doobie-h2" % DoobieVersion,
       "org.tpolecat" %% "doobie-hikari" % DoobieVersion,
+      "org.tpolecat" %% "doobie-postgres" % DoobieVersion,
+      "org.tpolecat" %% "doobie-postgres-circe" % DoobieVersion,
       "com.h2database" % "h2" % H2Version,
       "org.flywaydb" % "flyway-core" % FlywayVersion,
       "org.postgresql" % "postgresql" % "42.5.4"
