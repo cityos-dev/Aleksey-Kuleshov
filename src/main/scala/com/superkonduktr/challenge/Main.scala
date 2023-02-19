@@ -1,10 +1,10 @@
 package com.superkonduktr.challenge
 
-import com.superkonduktr.challenge.App
-
 import cats.effect.ExitCode
 import cats.effect.IO
 import cats.effect.IOApp
+
+import com.superkonduktr.challenge.App
 
 object Main extends IOApp {
   override def run(args: List[String]): IO[ExitCode] =

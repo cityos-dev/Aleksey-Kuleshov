@@ -1,9 +1,5 @@
 package com.superkonduktr.challenge
 
-import com.superkonduktr.challenge.config.ServerConfig
-import com.superkonduktr.challenge.domain.FileMetadata
-import com.superkonduktr.challenge.services.UploadService
-
 import cats.effect.Async
 import cats.effect.Resource
 import cats.syntax.all.*
@@ -20,6 +16,10 @@ import org.http4s.multipart.Multipart
 import org.http4s.server.Router
 import org.http4s.server.Server as Http4sServer
 import org.typelevel.ci.CIString
+
+import com.superkonduktr.challenge.config.ServerConfig
+import com.superkonduktr.challenge.domain.FileMetadata
+import com.superkonduktr.challenge.services.UploadService
 
 object Server {
   def apply[F[_]: Async](

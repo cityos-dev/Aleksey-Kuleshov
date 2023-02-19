@@ -2,13 +2,13 @@ package com.superkonduktr.challenge.repositories
 
 import java.time.OffsetDateTime
 
-import com.superkonduktr.challenge.domain.FileMetadata
-
 import cats.effect.Async
 import cats.syntax.all.*
 import doobie.hikari.HikariTransactor
 import doobie.implicits._
 import doobie.postgres.implicits._
+
+import com.superkonduktr.challenge.domain.FileMetadata
 
 class FileMetadataRepository[F[_]: Async](transactor: HikariTransactor[F]) {
   def get(fileId: String): F[Option[FileMetadata]] =

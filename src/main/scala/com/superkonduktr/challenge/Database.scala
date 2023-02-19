@@ -1,7 +1,5 @@
 package com.superkonduktr.challenge
 
-import com.superkonduktr.challenge.config.DatabaseConfig
-
 import cats.effect.Async
 import cats.effect.Resource
 import cats.effect.Sync
@@ -9,6 +7,8 @@ import cats.syntax.*
 import doobie.hikari.HikariTransactor
 import doobie.util.ExecutionContexts
 import org.flywaydb.core.Flyway
+
+import com.superkonduktr.challenge.config.DatabaseConfig
 
 object Database {
   def transactor[F[_]: Async](config: DatabaseConfig): Resource[F, HikariTransactor[F]] =

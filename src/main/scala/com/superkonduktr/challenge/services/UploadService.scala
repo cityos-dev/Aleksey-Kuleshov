@@ -2,14 +2,14 @@ package com.superkonduktr.challenge.services
 
 import java.util.UUID
 
+import cats.effect.Async
+import cats.syntax.all.*
+import org.http4s.multipart.Part
+
 import com.superkonduktr.challenge.domain.FileMetadata
 import com.superkonduktr.challenge.repositories.FileMetadataRepository
 import com.superkonduktr.challenge.repositories.FileRepository
 import com.superkonduktr.challenge.services.UploadService
-
-import cats.effect.Async
-import cats.syntax.all.*
-import org.http4s.multipart.Part
 
 class UploadService[F[_]: Async](
   fileRepository: FileRepository[F],
