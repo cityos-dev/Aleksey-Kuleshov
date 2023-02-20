@@ -18,6 +18,7 @@ import org.http4s.server.Server as Http4sServer
 import org.typelevel.ci.CIString
 
 import com.superkonduktr.challenge.config.ServerConfig
+import com.superkonduktr.challenge.domain.Error.FileDoesNotExist
 import com.superkonduktr.challenge.domain.FileMetadata
 import com.superkonduktr.challenge.services.UploadService
 
@@ -49,12 +50,12 @@ object Server {
 
       case request @ GET -> Root / "files" / fileId =>
         for {
-          fileExists <- uploadService.getFileMetadata(fileId)
-          response <- fileExists match {
+          fileMetadata <- uploadService.getFileMetadata(fileId)
+          response <- fileMetadata match {
             case None => NotFound()
-            case Some(fileMetadata) =>
+            case Some(metadata) =>
               val path = uploadService.filePath(fileId)
-              val headers = headerContentDisposition(fileMetadata.name)
+              val headers = headerContentDisposition(metadata.name)
               StaticFile
                 .fromPath(path, Some(request))
                 .map(_.putHeaders(headers))
@@ -72,7 +73,11 @@ object Server {
           } yield response
         }
 
-      case DELETE -> Root / "files" / fileId => ???
+      case DELETE -> Root / "files" / fileId =>
+        uploadService.deleteFile(fileId) match {
+          case Left(FileDoesNotExist) => NotFound()
+          case _ => NoContent()
+        }
     }
   }
 

@@ -5,6 +5,8 @@ import cats.syntax.all.*
 import fs2.io.file.Path
 import org.http4s.multipart.Part
 
+import com.superkonduktr.challenge.domain.Error
+import com.superkonduktr.challenge.domain.Error.FileDoesNotExist
 import com.superkonduktr.challenge.domain.FileMetadata
 import com.superkonduktr.challenge.repositories.FileMetadataRepository
 import com.superkonduktr.challenge.repositories.FileRepository
@@ -30,9 +32,9 @@ class UploadService[F[_]: Async](
       _ <- fileRepository.store(part, fileMetadata.id)
     } yield fileMetadata
 
-  def deleteFile(fileId: String): F[Unit] =
+  def deleteFile(fileId: String): F[Either[Error, Unit]] =
     for {
-      _ <- fileMetadataRepository.delete(fileId)
+      _ <- fileMetadataRepository.get(fileId)
       _ <- fileRepository.delete(fileId)
-    } yield ()
+    } yield Right(())
 }

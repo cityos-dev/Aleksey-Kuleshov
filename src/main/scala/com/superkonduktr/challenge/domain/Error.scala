@@ -1,4 +1,4 @@
-package com.superkonduktr.challenge
+package com.superkonduktr.challenge.domain
 
 sealed trait Error
 

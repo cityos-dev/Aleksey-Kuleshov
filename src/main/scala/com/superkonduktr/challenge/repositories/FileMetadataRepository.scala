@@ -12,7 +12,7 @@ import com.superkonduktr.challenge.domain.FileMetadata
 
 class FileMetadataRepository[F[_]: Async](transactor: HikariTransactor[F]) {
   def get(fileId: String): F[Option[FileMetadata]] =
-    sql"SELECT id, name, size_bytes, created_at FROM files_metadata WHERE id::TEXT = $fileId"
+    sql"SELECT id, name, size_bytes, created_at FROM files_metadata WHERE id = $fileId"
       .query[FileMetadata]
       .option
       .transact(transactor)
