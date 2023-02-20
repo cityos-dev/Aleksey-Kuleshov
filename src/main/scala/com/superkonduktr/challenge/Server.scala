@@ -74,10 +74,13 @@ object Server {
         }
 
       case DELETE -> Root / "files" / fileId =>
-        uploadService.deleteFile(fileId) match {
-          case Left(FileDoesNotExist) => NotFound()
-          case _ => NoContent()
-        }
+        for {
+          result <- uploadService.deleteFile(fileId).value
+          response <- result match {
+            case Left(FileDoesNotExist) => NotFound()
+            case _ => NoContent()
+          }
+        } yield response
     }
   }
 

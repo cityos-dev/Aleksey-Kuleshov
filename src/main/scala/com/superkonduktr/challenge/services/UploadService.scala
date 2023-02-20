@@ -1,5 +1,6 @@
 package com.superkonduktr.challenge.services
 
+import cats.data.EitherT
 import cats.effect.Async
 import cats.syntax.all.*
 import fs2.io.file.Path
@@ -32,9 +33,10 @@ class UploadService[F[_]: Async](
       _ <- fileRepository.store(part, fileMetadata.id)
     } yield fileMetadata
 
-  def deleteFile(fileId: String): F[Either[Error, Unit]] =
+  def deleteFile(fileId: String): EitherT[F, Error, Unit] =
     for {
-      _ <- fileMetadataRepository.get(fileId)
-      _ <- fileRepository.delete(fileId)
-    } yield Right(())
+      _ <- EitherT.fromOptionF(fileMetadataRepository.get(fileId), FileDoesNotExist)
+      _ <- EitherT.right(fileMetadataRepository.delete(fileId))
+      result <- fileRepository.delete(fileId)
+    } yield result
 }
