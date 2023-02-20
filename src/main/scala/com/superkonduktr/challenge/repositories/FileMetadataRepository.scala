@@ -25,9 +25,9 @@ class FileMetadataRepository[F[_]: Async](transactor: HikariTransactor[F]) {
 
   def create(
     fileName: Option[String],
-    fileSize: Int
+    fileSizeBytes: Long
   ): F[FileMetadata] =
-    sql"INSERT INTO files_metadata (name, size_bytes) VALUES ($fileName, $fileSize)"
+    sql"INSERT INTO files_metadata (name, size_bytes) VALUES ($fileName, $fileSizeBytes)"
       .update
       .withUniqueGeneratedKeys[FileMetadata]("id", "name", "size_bytes", "created_at")
       .transact(transactor)

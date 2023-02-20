@@ -2,6 +2,7 @@ package com.superkonduktr.challenge.services
 
 import cats.effect.Async
 import cats.syntax.all.*
+import fs2.io.file.Path
 import org.http4s.multipart.Part
 
 import com.superkonduktr.challenge.domain.FileMetadata
@@ -16,12 +17,16 @@ class UploadService[F[_]: Async](
   def getFileMetadata(fileId: String): F[Option[FileMetadata]] =
     fileMetadataRepository.get(fileId)
 
+  def filePath(fileId: String): Path =
+    fileRepository.path(fileId)
+
   def listFilesMetadata: F[List[FileMetadata]] =
     fileMetadataRepository.getAll
 
   def saveFile(part: Part[F]): F[FileMetadata] =
     for {
-      fileMetadata <- fileMetadataRepository.create(part.filename, 0)
+      length <- part.body.compile.count
+      fileMetadata <- fileMetadataRepository.create(part.filename, length)
       _ <- fileRepository.store(part, fileMetadata.id)
     } yield fileMetadata
 

@@ -17,7 +17,6 @@ import org.http4s.server.Router
 import org.http4s.server.Server as Http4sServer
 import org.typelevel.ci.CIString
 
-import com.superkonduktr.challenge.Server.headerContentDisposition
 import com.superkonduktr.challenge.config.ServerConfig
 import com.superkonduktr.challenge.domain.FileMetadata
 import com.superkonduktr.challenge.services.UploadService
@@ -53,9 +52,12 @@ object Server {
           fileExists <- uploadService.getFileMetadata(fileId)
           response <- fileExists match {
             case None => NotFound()
-            case Some(fileMetadata) => StaticFile
-                .fromPath(fs2.io.file.Path(s"/Users/supc/Desktop/${fileMetadata.id}"), Some(request))
-                .map(_.putHeaders(headerContentDisposition(fileMetadata.name)))
+            case Some(fileMetadata) =>
+              val path = uploadService.filePath(fileId)
+              val headers = headerContentDisposition(fileMetadata.name)
+              StaticFile
+                .fromPath(path, Some(request))
+                .map(_.putHeaders(headers))
                 .getOrElseF(NotFound())
           }
         } yield response
@@ -75,10 +77,7 @@ object Server {
   }
 
   private def headerContentDisposition(filename: String): Header.Raw =
-    Header.Raw(
-      CIString("Content-Disposition"),
-      s"attachment; filename=\"$filename\""
-    )
+    Header.Raw(CIString("Content-Disposition"), s"attachment; filename=\"$filename\"")
 
   private def headerLocation(baseUri: Uri, fileId: String): Location =
     Location(baseUri / "v1" / "files" / fileId)
