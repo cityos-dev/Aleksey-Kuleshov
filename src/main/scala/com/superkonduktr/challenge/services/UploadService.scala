@@ -1,5 +1,6 @@
 package com.superkonduktr.challenge.services
 
+import cats.Id
 import cats.data.EitherT
 import cats.effect.Async
 import cats.syntax.all.*
@@ -35,8 +36,7 @@ class UploadService[F[_]: Async](
 
   def deleteFile(fileId: String): EitherT[F, Error, Unit] =
     for {
-      _ <- EitherT.fromOptionF(fileMetadataRepository.get(fileId), FileDoesNotExist)
-      _ <- EitherT.right(fileMetadataRepository.delete(fileId))
-      result <- fileRepository.delete(fileId)
+      metadataDeleted <- EitherT.right(fileMetadataRepository.delete(fileId))
+      result <- EitherT.cond(metadataDeleted, (), FileDoesNotExist)
     } yield result
 }

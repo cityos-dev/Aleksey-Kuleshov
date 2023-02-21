@@ -32,10 +32,10 @@ class FileMetadataRepository[F[_]: Async](transactor: HikariTransactor[F]) {
       .withUniqueGeneratedKeys[FileMetadata]("id", "name", "size_bytes", "created_at")
       .transact(transactor)
 
-  def delete(fileId: String): F[Unit] =
+  def delete(fileId: String): F[Boolean] =
     sql"DELETE FROM files_metadata WHERE id = $fileId"
       .update
       .run
       .transact(transactor)
-      .map(_ => ())
+      .map(_ > 0)
 }
