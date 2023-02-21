@@ -18,7 +18,7 @@ import org.http4s.server.Server as Http4sServer
 import org.typelevel.ci.CIString
 
 import com.superkonduktr.challenge.config.ServerConfig
-import com.superkonduktr.challenge.domain.Error.FileDoesNotExist
+import com.superkonduktr.challenge.domain.Error
 import com.superkonduktr.challenge.domain.FileMetadata
 import com.superkonduktr.challenge.services.UploadService
 
@@ -67,9 +67,14 @@ object Server {
         request.decode[Multipart[F]] { decoded =>
           val part = decoded.parts.head
           for {
-            fileMetadata <- uploadService.saveFile(part)
-            headers = headerLocation(baseUri(serverConfig), fileMetadata.id)
-            response <- Created.headers(headers)
+            result <- uploadService.saveFile(part).value
+            response <- result match {
+              case Left(Error.FileAlreadyExists) => Conflict()
+              case Left(_) => InternalServerError()
+              case Right(fileMetadata) =>
+                val headers = headerLocation(baseUri(serverConfig), fileMetadata.id)
+                Created.headers(headers)
+            }
           } yield response
         }
 
@@ -77,7 +82,8 @@ object Server {
         for {
           result <- uploadService.deleteFile(fileId).value
           response <- result match {
-            case Left(FileDoesNotExist) => NotFound()
+            case Left(Error.FileDoesNotExist) => NotFound()
+            case Left(_) => InternalServerError()
             case _ => NoContent()
           }
         } yield response

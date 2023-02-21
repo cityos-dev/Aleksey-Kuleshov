@@ -6,8 +6,10 @@ import cats.effect.Async
 import cats.syntax.all.*
 import doobie.hikari.HikariTransactor
 import doobie.implicits._
+import doobie.postgres.*
 import doobie.postgres.implicits._
 
+import com.superkonduktr.challenge.domain.Error
 import com.superkonduktr.challenge.domain.FileMetadata
 
 class FileMetadataRepository[F[_]: Async](transactor: HikariTransactor[F]) {
@@ -26,11 +28,14 @@ class FileMetadataRepository[F[_]: Async](transactor: HikariTransactor[F]) {
   def create(
     fileName: Option[String],
     fileSizeBytes: Long
-  ): F[FileMetadata] =
+  ): F[Either[Error, FileMetadata]] =
     sql"INSERT INTO files_metadata (name, size_bytes) VALUES ($fileName, $fileSizeBytes)"
       .update
       .withUniqueGeneratedKeys[FileMetadata]("id", "name", "size_bytes", "created_at")
       .transact(transactor)
+      .attemptSomeSqlState {
+        case sqlstate.class23.UNIQUE_VIOLATION => Error.FileAlreadyExists
+      }
 
   def delete(fileId: String): F[Boolean] =
     sql"DELETE FROM files_metadata WHERE id = $fileId"

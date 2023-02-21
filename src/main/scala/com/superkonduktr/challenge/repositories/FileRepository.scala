@@ -18,9 +18,6 @@ class FileRepository[F[_]: Async](config: FileRepositoryConfig) {
       .compile
       .drain
 
-  def delete(path: String): EitherT[F, Error, Unit] =
-    EitherT.pure(())
-
   def path(fileId: String): Path =
     Path(s"${config.uploadPath}/$fileId")
 }
