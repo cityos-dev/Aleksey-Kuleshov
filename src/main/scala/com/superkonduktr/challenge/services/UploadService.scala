@@ -4,6 +4,7 @@ import cats.Applicative
 import cats.Id
 import cats.data.EitherT
 import cats.effect.Async
+import cats.effect.Concurrent
 import cats.syntax.all.*
 import fs2.io.file.Path
 import org.http4s.multipart.Part
@@ -33,7 +34,7 @@ class UploadService[F[_]: Async](
     for {
       fileName <- extractFileName(part)
       contentType <- extractContentType(part)
-      fileSizeBytes <- EitherT.right(part.body.compile.count)
+      fileSizeBytes <- extractFileSizeBytes(part)
       fileMetadata <- EitherT(fileMetadataRepository.create(fileName, fileSizeBytes, contentType))
       _ <- EitherT.right(fileRepository.store(part, fileMetadata.id))
     } yield fileMetadata
@@ -50,6 +51,12 @@ object UploadService {
 
   private def extractFileName[F[_]: Applicative](part: Part[F]): EitherT[F, Error, String] =
     EitherT.fromEither(part.filename.toRight(Error.InvalidFileName))
+
+  private def extractFileSizeBytes[F[_]: Concurrent](part: Part[F]): EitherT[F, Error, Long] =
+    for {
+      size <- EitherT.right(part.body.compile.count)
+      result <- EitherT.cond(size > 0, size, Error.FileIsEmpty)
+    } yield result
 
   private def extractContentType[F[_]: Applicative](part: Part[F]): EitherT[F, Error, String] = {
     val error = Error.UnsupportedContentType

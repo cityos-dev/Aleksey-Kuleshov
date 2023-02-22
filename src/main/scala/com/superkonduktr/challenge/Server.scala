@@ -70,7 +70,7 @@ object Server {
             result <- uploadService.saveFile(part).value
             response <- result match {
               case Left(Error.FileAlreadyExists) => Conflict()
-              case Left(Error.InvalidFileName) => BadRequest()
+              case Left(Error.InvalidFileName) | Left(Error.FileIsEmpty) => BadRequest()
               case Left(Error.UnsupportedContentType) => UnsupportedMediaType()
               case Left(_) => InternalServerError()
               case Right(fileMetadata) =>
