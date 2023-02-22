@@ -66,21 +66,24 @@ object Server {
         } yield response
 
       case request @ POST -> Root / "files" =>
-        request.decode[Multipart[F]] { decoded =>
-          val part = decoded.parts.head
-          for {
-            result <- uploadService.saveFile(part).value
-            response <- result match {
-              case Left(Error.FileAlreadyExists) => Conflict()
-              case Left(Error.InvalidFileName) => BadRequest()
-              case Left(Error.FileIsEmpty) => UnprocessableEntity()
-              case Left(Error.UnsupportedContentType) => UnsupportedMediaType()
-              case Left(_) => InternalServerError()
-              case Right(fileMetadata) =>
-                val headers = createFileResponseHeader(baseUri(serverConfig), fileMetadata)
-                Created.headers(headers)
+        request.headers.get(CIString("Content-Length")) match {
+          case Some(_) =>
+            request.decode[Multipart[F]] { decoded =>
+              val part = decoded.parts.head
+              for {
+                result <- uploadService.saveFile(part).value
+                response <- result match {
+                  case Left(Error.FileAlreadyExists) => Conflict()
+                  case Left(Error.InvalidFileName) | Left(Error.FileIsEmpty) => BadRequest()
+                  case Left(Error.UnsupportedContentType) => UnsupportedMediaType()
+                  case Left(_) => InternalServerError()
+                  case Right(fileMetadata) =>
+                    val headers = createFileResponseHeader(baseUri(serverConfig), fileMetadata)
+                    Created.headers(headers)
+                }
+              } yield response
             }
-          } yield response
+          case _ => BadRequest()
         }
 
       case DELETE -> Root / "files" / fileId =>
