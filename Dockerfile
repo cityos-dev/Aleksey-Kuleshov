@@ -5,8 +5,6 @@ RUN (SBT_VERSION=$(cat project/build.properties | cut -d '=' -f 2 | tr -d '[:spa
       && curl -L -O https://github.com/sbt/sbt/releases/download/v${SBT_VERSION}/sbt-${SBT_VERSION}.tgz \
       && tar -xzf sbt-${SBT_VERSION}.tgz \
       && ./sbt/bin/sbt -mem 4096 sbtVersion)
-
-COPY project/*.scala project/
 COPY src/ src/
 COPY build.sbt ./
 RUN ./sbt/bin/sbt -mem 4096 clean stage
