@@ -1,6 +1,16 @@
 version: "3.8"
 
 services:
+  app:
+    container_name: woven-app
+    build:
+      context: .
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+
   db:
     image: postgres:15-alpine
     container_name: woven-db
@@ -8,7 +18,10 @@ services:
       - POSTGRES_DB=woven
       - POSTGRES_USER=woven
       - POSTGRES_PASSWORD=woven
+    healthcheck:
+      test: ["CMD", "pg_isready", "-q", "-d", "woven", "-U", "woven"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     ports:
       - "5432:5432"
-    volumes:
-      - ./.postgres-data:/var/lib/postgresql/data
