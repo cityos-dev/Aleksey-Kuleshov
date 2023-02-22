@@ -12,7 +12,6 @@ import org.http4s.Uri
 import org.http4s.dsl.Http4sDsl
 import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.headers.Location
-import org.http4s.headers.`Content-Length`
 import org.http4s.implicits.*
 import org.http4s.multipart.Multipart
 import org.http4s.server.Router
@@ -68,7 +67,7 @@ object Server {
 
       case request @ POST -> Root / "files" =>
         request.headers.get(CIString("Content-Length")).map(_.head) match {
-          case Some(header) if header != `Content-Length`.zero =>
+          case Some(contentLength) if contentLength.value != "0" =>
             request.decode[Multipart[F]] { decoded =>
               val part = decoded.parts.head
               for {
