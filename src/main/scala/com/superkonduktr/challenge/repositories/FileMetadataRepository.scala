@@ -3,7 +3,7 @@ package com.superkonduktr.challenge.repositories
 import java.time.OffsetDateTime
 
 import cats.effect.Async
-import cats.syntax.all.*
+import cats.syntax.functor.*
 import doobie.hikari.HikariTransactor
 import doobie.implicits._
 import doobie.postgres.*

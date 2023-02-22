@@ -2,7 +2,8 @@ package com.superkonduktr.challenge
 
 import cats.effect.Async
 import cats.effect.Resource
-import cats.syntax.all.*
+import cats.syntax.flatMap.*
+import cats.syntax.functor.*
 import com.comcast.ip4s.Host
 import com.comcast.ip4s.Port
 import org.http4s.Header
@@ -36,7 +37,7 @@ object Server {
       .withHttpApp(httpApp)
       .build
 
-  private def v1Routes[F[_]: Async](
+  def v1Routes[F[_]: Async](
     serverConfig: ServerConfig,
     uploadService: UploadService[F]
   ): HttpRoutes[F] = {
@@ -75,7 +76,7 @@ object Server {
                 response <- result match {
                   case Left(Error.FileAlreadyExists) => Conflict()
                   case Left(Error.InvalidFileName) | Left(Error.FileIsEmpty) => BadRequest()
-                  case Left(Error.UnsupportedContentType) => UnsupportedMediaType()
+                  case Left(Error.UnsupportedMediaType) => UnsupportedMediaType()
                   case Left(_) => InternalServerError()
                   case Right(fileMetadata) =>
                     val headers = createFileResponseHeader(baseUri(serverConfig), fileMetadata)
@@ -98,15 +99,15 @@ object Server {
     }
   }
 
-  private def getFileResponseHeaders(fileMetadata: FileMetadata): Seq[Header.Raw] =
+  def getFileResponseHeaders(fileMetadata: FileMetadata): Seq[Header.Raw] =
     List(
       Header.Raw(CIString("Content-Type"), fileMetadata.contentType),
       Header.Raw(CIString("Content-Disposition"), s"attachment; filename=\"${fileMetadata.name}\"")
     )
 
-  private def createFileResponseHeader(baseUri: Uri, fileMetadata: FileMetadata): Location =
+  def createFileResponseHeader(baseUri: Uri, fileMetadata: FileMetadata): Location =
     Location(baseUri / "v1" / "files" / fileMetadata.id)
 
-  private def baseUri(serverConfig: ServerConfig): Uri =
+  def baseUri(serverConfig: ServerConfig): Uri =
     Uri.unsafeFromString(s"http://${serverConfig.host}:${serverConfig.port}")
 }

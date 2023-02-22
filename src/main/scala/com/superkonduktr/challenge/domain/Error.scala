@@ -7,5 +7,5 @@ object Error {
   case object FileDoesNotExist extends Error
   case object FileIsEmpty extends Error
   case object InvalidFileName extends Error
-  case object UnsupportedContentType extends Error
+  case object UnsupportedMediaType extends Error
 }

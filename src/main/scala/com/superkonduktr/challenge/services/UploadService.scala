@@ -5,7 +5,6 @@ import cats.Id
 import cats.data.EitherT
 import cats.effect.Async
 import cats.effect.Concurrent
-import cats.syntax.all.*
 import fs2.io.file.Path
 import org.http4s.multipart.Part
 
@@ -59,7 +58,7 @@ object UploadService {
     } yield result
 
   private def extractContentType[F[_]: Applicative](part: Part[F]): EitherT[F, Error, String] = {
-    val error = Error.UnsupportedContentType
+    val error = Error.UnsupportedMediaType
     val contentType = for {
       value <- part.contentType
       mediaType = value.mediaType
