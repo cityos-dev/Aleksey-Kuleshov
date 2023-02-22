@@ -57,7 +57,7 @@ object Server {
             case None => NotFound()
             case Some(metadata) =>
               val path = uploadService.filePath(fileId)
-              val headers = headerContentDisposition(metadata.name)
+              val headers = getFileResponseHeaders(metadata)
               StaticFile
                 .fromPath(path, Some(request))
                 .map(_.putHeaders(headers))
@@ -72,11 +72,12 @@ object Server {
             result <- uploadService.saveFile(part).value
             response <- result match {
               case Left(Error.FileAlreadyExists) => Conflict()
-              case Left(Error.InvalidFileName) | Left(Error.FileIsEmpty) => BadRequest()
+              case Left(Error.InvalidFileName) => BadRequest()
+              case Left(Error.FileIsEmpty) => UnprocessableEntity()
               case Left(Error.UnsupportedContentType) => UnsupportedMediaType()
               case Left(_) => InternalServerError()
               case Right(fileMetadata) =>
-                val headers = headerLocation(baseUri(serverConfig), fileMetadata.id)
+                val headers = createFileResponseHeader(baseUri(serverConfig), fileMetadata)
                 Created.headers(headers)
             }
           } yield response
@@ -94,11 +95,14 @@ object Server {
     }
   }
 
-  private def headerContentDisposition(filename: String): Header.Raw =
-    Header.Raw(CIString("Content-Disposition"), s"attachment; filename=\"$filename\"")
+  private def getFileResponseHeaders(fileMetadata: FileMetadata): Seq[Header.Raw] =
+    List(
+      Header.Raw(CIString("Content-Type"), fileMetadata.contentType),
+      Header.Raw(CIString("Content-Disposition"), s"attachment; filename=\"${fileMetadata.name}\"")
+    )
 
-  private def headerLocation(baseUri: Uri, fileId: String): Location =
-    Location(baseUri / "v1" / "files" / fileId)
+  private def createFileResponseHeader(baseUri: Uri, fileMetadata: FileMetadata): Location =
+    Location(baseUri / "v1" / "files" / fileMetadata.id)
 
   private def baseUri(serverConfig: ServerConfig): Uri =
     Uri.unsafeFromString(s"http://${serverConfig.host}:${serverConfig.port}")
