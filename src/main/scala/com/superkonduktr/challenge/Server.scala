@@ -3,6 +3,7 @@ package com.superkonduktr.challenge
 import cats.effect.Async
 import cats.effect.Resource
 import cats.syntax.all.*
+import com.comcast.ip4s.Host
 import com.comcast.ip4s.Port
 import org.http4s.Header
 import org.http4s.HttpRoutes
@@ -30,6 +31,7 @@ object Server {
     val httpApp = Router("/v1" -> v1Routes(serverConfig, uploadService)).orNotFound
     EmberServerBuilder
       .default[F]
+      .withHost(Host.fromString(serverConfig.host).get)
       .withPort(Port.fromInt(serverConfig.port).get)
       .withHttpApp(httpApp)
       .build

@@ -23,5 +23,6 @@ WORKDIR app
 COPY --from=packager_graal /packager/lib/ ./lib/
 COPY --from=packager_graal /packager/bin/ ./bin/
 COPY --from=packager_graal /packager/app/ ./lib/
+RUN mkdir -p /var/uploads
 EXPOSE 8080
 ENTRYPOINT ["./bin/challenge"]
