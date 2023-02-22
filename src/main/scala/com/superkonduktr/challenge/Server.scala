@@ -70,6 +70,7 @@ object Server {
             result <- uploadService.saveFile(part).value
             response <- result match {
               case Left(Error.FileAlreadyExists) => Conflict()
+              case Left(Error.UnsupportedContentType) => UnsupportedMediaType()
               case Left(_) => InternalServerError()
               case Right(fileMetadata) =>
                 val headers = headerLocation(baseUri(serverConfig), fileMetadata.id)

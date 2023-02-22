@@ -1,5 +1,6 @@
 package com.superkonduktr.challenge.services
 
+import cats.Applicative
 import cats.Id
 import cats.data.EitherT
 import cats.effect.Async
@@ -17,6 +18,8 @@ class UploadService[F[_]: Async](
   fileRepository: FileRepository[F],
   fileMetadataRepository: FileMetadataRepository[F]
 ) {
+  import UploadService._
+
   def getFileMetadata(fileId: String): F[Option[FileMetadata]] =
     fileMetadataRepository.get(fileId)
 
@@ -28,8 +31,10 @@ class UploadService[F[_]: Async](
 
   def saveFile(part: Part[F]): EitherT[F, Error, FileMetadata] =
     for {
+      fileName <- extractFileName(part)
+      contentType <- extractContentType(part)
       fileSizeBytes <- EitherT.right(part.body.compile.count)
-      fileMetadata <- EitherT(fileMetadataRepository.create(part.filename, fileSizeBytes))
+      fileMetadata <- EitherT(fileMetadataRepository.create(fileName, fileSizeBytes, contentType))
       _ <- EitherT.right(fileRepository.store(part, fileMetadata.id))
     } yield fileMetadata
 
@@ -38,4 +43,25 @@ class UploadService[F[_]: Async](
       metadataDeleted <- EitherT.right(fileMetadataRepository.delete(fileId))
       result <- EitherT.cond(metadataDeleted, (), Error.FileDoesNotExist)
     } yield result
+}
+
+object UploadService {
+  val allowedContentTypes: Seq[String] = List("video/mp4", "video/mpeg")
+
+  private def extractFileName[F[_]: Applicative](part: Part[F]): EitherT[F, Error, String] =
+    EitherT.fromEither(part.filename.toRight(Error.InvalidFileName))
+
+  private def extractContentType[F[_]: Applicative](part: Part[F]): EitherT[F, Error, String] = {
+    val error = Error.UnsupportedContentType
+    val contentType = for {
+      value <- part.contentType
+      mediaType = value.mediaType
+    } yield s"${mediaType.mainType}/${mediaType.subType}"
+
+    EitherT.fromEither(
+      contentType.toRight(error).flatMap { value =>
+        Either.cond(allowedContentTypes.contains(value), value, error)
+      }
+    )
+  }
 }

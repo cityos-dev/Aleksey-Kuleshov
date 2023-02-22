@@ -13,6 +13,7 @@ case class FileMetadata(
   id: String,
   name: String,
   sizeBytes: Long,
+  contentType: String,
   createdAt: OffsetDateTime
 )
 

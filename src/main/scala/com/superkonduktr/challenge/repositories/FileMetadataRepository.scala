@@ -26,12 +26,13 @@ class FileMetadataRepository[F[_]: Async](transactor: HikariTransactor[F]) {
       .transact(transactor)
 
   def create(
-    fileName: Option[String],
-    fileSizeBytes: Long
+    fileName: String,
+    fileSizeBytes: Long,
+    contentType: String
   ): F[Either[Error, FileMetadata]] =
-    sql"INSERT INTO files_metadata (name, size_bytes) VALUES ($fileName, $fileSizeBytes)"
+    sql"INSERT INTO files_metadata (name, size_bytes, content_type) VALUES ($fileName, $fileSizeBytes, $contentType)"
       .update
-      .withUniqueGeneratedKeys[FileMetadata]("id", "name", "size_bytes", "created_at")
+      .withUniqueGeneratedKeys[FileMetadata]("id", "name", "size_bytes", "content_type", "created_at")
       .transact(transactor)
       .attemptSomeSqlState {
         case sqlstate.class23.UNIQUE_VIOLATION => Error.FileAlreadyExists
